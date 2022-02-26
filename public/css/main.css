@@ -1,0 +1,86 @@
+.login-img{
+    background-image: url(/img/admin-panel.jpeg);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    border-radius: 1rem 0 0 1rem;
+    
+}
+.back-modules{
+    background-image: url(/img/fondo-claro.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;   
+    width: 100%;
+}
+.back-card{
+    background-color: rgba(150, 155, 156, 0.6);
+}
+.img-modulo{
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin: 0 auto 10px;
+}
+.menu-left{
+    height: auto;
+    background-color: rgb(154, 166, 178 );
+}
+.element-menu{
+    margin: 0 10px;
+}
+.item-menu{
+    font-weight: bold;
+    color: white;
+    font-size: 1.1em;
+}
+.item-menu:hover{
+    box-shadow: 0 8px 10px 2px rgba(255, 255, 255, .7);
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+}
+.box-search{
+    display: block;
+    position: absolute;
+    width: 95%;
+    border-radius: 2px;
+    border: solid 1px rgba(191, 191, 191, 0.7);
+    background-color: white;
+    z-index: 999;
+}
+.selectInput{
+    list-style: none;
+    height: 30px;
+    padding: 5px 10px;
+    width: 100%;
+    border-bottom: solid 1px rgba(191, 191, 191, 0.7);
+    cursor: pointer;
+    font-weight: bold;
+}
+.list-item{
+    margin: 0;
+    padding: 0;
+}
+.wrem-18{
+    width: 18rem;
+}
+input[type="radio"]{
+    display: none;
+}
+input[type="radio"] + label:before {
+    content: "";
+    width: 25px;
+    height: 25px;
+    margin: 0 10px;
+    float: left;
+    border: solid 1px #3490dc;
+    border-radius: 20px;
+}
+input[type="radio"]:checked + label:before {
+    content: "";
+    width: 25px;
+    height: 25px;
+    float: left;
+    background-color: #3490dc;
+    border-radius: 20px;
+}
