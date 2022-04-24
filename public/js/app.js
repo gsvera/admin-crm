@@ -2508,12 +2508,6 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
-function TableUsario(props) {
-  fetch('/funct/getUser').then(function (res) {
-    return res.json();
-  }).then(function (result) {});
-}
-
 var Company = /*#__PURE__*/function (_React$Component) {
   _inherits(Company, _React$Component);
 
@@ -2533,13 +2527,18 @@ var Company = /*#__PURE__*/function (_React$Component) {
       id_company: 0,
       name_company: "",
       rfc: "",
-      number_users: 1,
+      number_users: 0,
       active: true,
       id_user_admin: 0,
+      id_user_relation: 0,
       inputShow: "d-none",
+      inputShowUserR: "d-none",
+      listUserFilRe: [],
       inputSearchUser: "",
       buttonClassSave: "btn btn-success",
-      buttonTextSave: "Guardar"
+      buttonTextSave: "Guardar",
+      inputSearchUserRelation: "",
+      listUserRel: []
     };
     _this.handleNameCompany = _this.handleNameCompany.bind(_assertThisInitialized(_this));
     _this.handleNumberUser = _this.handleNumberUser.bind(_assertThisInitialized(_this));
@@ -2551,6 +2550,11 @@ var Company = /*#__PURE__*/function (_React$Component) {
     _this.saveCompany = _this.saveCompany.bind(_assertThisInitialized(_this));
     _this.handleRfc = _this.handleRfc.bind(_assertThisInitialized(_this));
     _this.searchCompany = _this.searchCompany.bind(_assertThisInitialized(_this));
+    _this.handleInputSearchUserRelation = _this.handleInputSearchUserRelation.bind(_assertThisInitialized(_this));
+    _this.showListUserRelation = _this.showListUserRelation.bind(_assertThisInitialized(_this));
+    _this.handleUserRelation = _this.handleUserRelation.bind(_assertThisInitialized(_this));
+    _this.addUserRe = _this.addUserRe.bind(_assertThisInitialized(_this));
+    _this.getUserRelathion = _this.getUserRelathion.bind(_assertThisInitialized(_this));
     return _this;
   }
 
@@ -2564,6 +2568,7 @@ var Company = /*#__PURE__*/function (_React$Component) {
   }, {
     key: "handleNumberUser",
     value: function handleNumberUser(e) {
+      console.log(e.target.value);
       this.setState({
         number_users: e.target.value
       });
@@ -2700,6 +2705,7 @@ var Company = /*#__PURE__*/function (_React$Component) {
         url = '/funct/updateCompany';
       }
 
+      console.log(this.state.number_users);
       var data = {
         name_company: this.state.name_company,
         rfc: this.state.rfc,
@@ -2715,8 +2721,8 @@ var Company = /*#__PURE__*/function (_React$Component) {
       }).then(function (res) {
         return res.json();
       }).then(function (result) {
-        closeAlert();
         console.log(result);
+        closeAlert();
 
         if (result.error == false) {
           _this4.getCompanys('no-alert');
@@ -2786,9 +2792,47 @@ var Company = /*#__PURE__*/function (_React$Component) {
       });
     }
   }, {
+    key: "getUserRelathion",
+    value: function getUserRelathion(idCompany) {
+      var _this6 = this;
+
+      fetch("/funct/userRelathion?id_company=" + idCompany).then(function (res) {
+        return res.json();
+      }).then(function (result) {
+        _this6.setState({
+          listUserRel: result.data
+        });
+      });
+    }
+  }, {
+    key: "deleteRelathionUserCompa",
+    value: function deleteRelathionUserCompa(e, idPivot, idCompany) {
+      var _this7 = this;
+
+      e.preventDefault();
+      fetch('/funct/deleteRelationComUser', {
+        method: "POST",
+        headers: headConexion,
+        body: JSON.stringify({
+          idPivot: idPivot
+        })
+      }).then(function (res) {
+        return res.json();
+      }).then(function (result) {
+        if (result.error == false) {
+          _this7.getUserRelathion(idCompany);
+
+          successAlert("Hecho", result.message);
+        } else {
+          errorAlert("Error", result.message);
+        }
+      });
+    }
+  }, {
     key: "setCompanyForm",
     value: function setCompanyForm(e, idCompany) {
       e.preventDefault();
+      this.getUserRelathion(idCompany);
       var companySelect = this.state.companys.filter(function (item) {
         return item.id_company == idCompany;
       });
@@ -2806,9 +2850,92 @@ var Company = /*#__PURE__*/function (_React$Component) {
       $("#newCompany").modal("show");
     }
   }, {
+    key: "handleInputSearchUserRelation",
+    value: function handleInputSearchUserRelation(e) {
+      this.setState({
+        inputSearchUserRelation: e.target.value
+      });
+    }
+  }, {
+    key: "handleUserRelation",
+    value: function handleUserRelation(e) {
+      e.preventDefault();
+      var listFiler = this.state.listUser.filter(function (item) {
+        return item.name.toUpperCase().match(e.target.value.toUpperCase()) || item.email.toUpperCase().match(e.target.value.toUpperCase());
+      });
+      this.setState({
+        usuarios: listFiler
+      });
+
+      if (e.target.value != '') {
+        this.setState({
+          inputShowUserR: "box-search"
+        });
+      } else {
+        this.setState({
+          inputShowUserR: "d-none"
+        });
+      }
+    }
+  }, {
+    key: "showListUserRelation",
+    value: function showListUserRelation() {
+      this.setState({
+        inputShowUserR: "box-search",
+        listUserFilRe: this.state.listUser
+      });
+    }
+  }, {
+    key: "selectUserRelation",
+    value: function selectUserRelation(e, idUser, nameUser) {
+      e.preventDefault();
+      this.setState({
+        inputSearchUserRelation: nameUser,
+        id_user_relation: idUser,
+        inputShowUserR: "d-none"
+      });
+    }
+  }, {
+    key: "addUserRe",
+    value: function addUserRe() {
+      var _this8 = this;
+
+      var data = {
+        id_user: this.state.id_user_relation,
+        id_company: this.state.id_company
+      };
+      activeLoader("Agregando...", "Guardando datos");
+      fetch('/funct/addUserRelComp', {
+        method: "POST",
+        headers: headConexion,
+        body: JSON.stringify(data)
+      }).then(function (res) {
+        return res.json();
+      }).then(function (result) {
+        closeAlert();
+
+        if (result.error == false) {
+          _this8.getUserRelathion(_this8.state.id_company);
+
+          _this8.setState({
+            inputSearchUserRelation: "",
+            id_user_relation: 0
+          });
+
+          setTimeout(function () {
+            successAlert("Agregado!!", "Se agrego el usuario a la compañia");
+          }, 100);
+        } else {
+          setTimeout(function () {
+            errorAlert("Error", result.message);
+          }, 100);
+        }
+      });
+    }
+  }, {
     key: "render",
     value: function render() {
-      var _this6 = this;
+      var _this9 = this;
 
       return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("div", {
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("h1", {
@@ -2922,7 +3049,7 @@ var Company = /*#__PURE__*/function (_React$Component) {
                             return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("li", {
                               className: "selectInput",
                               onClick: function onClick(event) {
-                                return _this6.selectUser(event, item.id);
+                                return _this9.selectUser(event, item.id);
                               },
                               children: [item.name, " | ", item.email]
                             }, item.id);
@@ -2959,7 +3086,6 @@ var Company = /*#__PURE__*/function (_React$Component) {
                       className: "form-control",
                       type: "number",
                       min: "1",
-                      placeholder: "Ingrese correo electr\xF3nico",
                       onChange: this.handleNumberUser,
                       value: this.state.number_users,
                       required: true
@@ -2974,6 +3100,84 @@ var Company = /*#__PURE__*/function (_React$Component) {
                       type: "checkbox",
                       onChange: this.handleActive,
                       checked: this.state.active
+                    })]
+                  })]
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("div", {
+                  children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("hr", {}), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("div", {
+                    className: "d-flex",
+                    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("div", {
+                      className: "col-8",
+                      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("label", {
+                        className: "text-secondary font-weight-bold",
+                        children: "Usuario a relacionar"
+                      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("input", {
+                        className: "form-control",
+                        type: "text",
+                        onKeyUp: this.handleUserRelation,
+                        onClick: this.showListUserRelation,
+                        onChange: this.handleInputSearchUserRelation,
+                        value: this.state.inputSearchUserRelation,
+                        placeholder: "Buscar usuario"
+                      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
+                        className: this.state.inputShowUserR,
+                        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("ul", {
+                          className: "list-item",
+                          children: this.state.usuarios.map(function (item) {
+                            return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("li", {
+                              className: "selectInput",
+                              onClick: function onClick(event) {
+                                return _this9.selectUserRelation(event, item.id, item.name + " | " + item.email);
+                              },
+                              children: [item.name, " | ", item.email]
+                            }, item.id);
+                          })
+                        })
+                      })]
+                    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
+                      className: "col-md-2 d-flex align-items-end",
+                      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("button", {
+                        type: "button",
+                        className: "btn btn-success mx-2",
+                        onClick: this.addUserRe,
+                        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("i", {
+                          className: "fa fa-plus",
+                          "aria-hidden": "true"
+                        }), " Agregar"]
+                      })
+                    })]
+                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("table", {
+                    className: "table mt-2",
+                    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("thead", {
+                      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("tr", {
+                        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("th", {
+                          scolpe: "col",
+                          children: "id"
+                        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("th", {
+                          children: "Nombre"
+                        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("th", {
+                          children: "Email"
+                        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("th", {})]
+                      })
+                    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("tbody", {
+                      children: this.state.listUserRel.map(function (item) {
+                        return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("tr", {
+                          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("td", {
+                            children: item.id_usuario
+                          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("td", {
+                            children: item.name
+                          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("td", {
+                            children: item.email
+                          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("th", {
+                            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("button", {
+                              className: "btn btn-danger",
+                              onClick: function onClick(event) {
+                                return _this9.deleteRelathionUserCompa(event, item.id_pivote, item.id_company);
+                              },
+                              children: "Borrar"
+                            })
+                          })]
+                        }, item.id_usuario);
+                      })
                     })]
                   })]
                 })]
@@ -3052,13 +3256,13 @@ var Company = /*#__PURE__*/function (_React$Component) {
                   className: "text-center",
                   children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("button", {
                     onClick: function onClick(event) {
-                      return _this6.setCompanyForm(event, item.id_company);
+                      return _this9.setCompanyForm(event, item.id_company);
                     },
                     className: "btn btn-outline-info font-weight-bold mx-1",
                     children: "Editar"
                   }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("button", {
                     onClick: function onClick(event) {
-                      return _this6.deleteCompany(event, item.id_company);
+                      return _this9.deleteCompany(event, item.id_company);
                     },
                     className: "btn btn-outline-danger font-weight-bold mx-1",
                     children: "Eliminar"

@@ -35,10 +35,15 @@ Route::group(['prefix' => 'funct', 'middleware' => 'authUser'], function(){
     Route::post('updateUser', [UsuarioController::class, 'updateUser']);
     Route::post('deleteUser', [UsuarioController::class, 'deleteUser']);
     Route::get('getUserById', [UsuarioController::class, 'getUserById']);
+
     Route::post('newCompany', [CompanyController::class, 'newCompany']);
     Route::get('getCompanys', [CompanyController::class, 'getCompanys']);
     Route::post('deleteCompany', [CompanyController::class, 'deleteCompany']);
     Route::post('updateCompany', [CompanyController::class, 'updateCompany']);
+    Route::post('addUserRelComp', [CompanyController::class, 'addUserRelComp']);
+    Route::get('userRelathion', [CompanyController::class, 'userRelathion']);
+    Route::post('deleteRelationComUser', [CompanyController::class, 'deleteRelationComUser']);
+
     Route::post('newPlan', [PlanController::class, 'newPlan']);
     Route::get('getPlans', [PlanController::class, 'getPlans']);
     Route::post('updatePlan', [PlanController::class, 'updatePlan']);

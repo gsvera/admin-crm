@@ -1,13 +1,5 @@
 import React from 'react'
 
-function TableUsario(props){
-    fetch('/funct/getUser')
-    .then(res => res.json())
-    .then((result) => {
-
-    })
-}
-
 class Company extends React.Component{
     constructor(props){
         super(props)
@@ -19,13 +11,18 @@ class Company extends React.Component{
             id_company:0,
             name_company:"",
             rfc:"",
-            number_users:1,
+            number_users:0,
             active:true,
             id_user_admin:0,
+            id_user_relation:0,
             inputShow:"d-none",
+            inputShowUserR: "d-none",
+            listUserFilRe:[],
             inputSearchUser:"",
             buttonClassSave:"btn btn-success",
-            buttonTextSave:"Guardar"
+            buttonTextSave:"Guardar",
+            inputSearchUserRelation: "",
+            listUserRel: []
         }
         this.handleNameCompany = this.handleNameCompany.bind(this)
         this.handleNumberUser = this.handleNumberUser.bind(this)
@@ -37,6 +34,11 @@ class Company extends React.Component{
         this.saveCompany = this.saveCompany.bind(this)
         this.handleRfc = this.handleRfc.bind(this)
         this.searchCompany = this.searchCompany.bind(this)
+        this.handleInputSearchUserRelation = this.handleInputSearchUserRelation.bind(this)
+        this.showListUserRelation = this.showListUserRelation.bind(this)
+        this.handleUserRelation = this.handleUserRelation.bind(this)
+        this.addUserRe = this.addUserRe.bind(this)
+        this.getUserRelathion = this.getUserRelathion.bind(this)
     }
     handleNameCompany(e){
         this.setState({name_company:e.target.value})
@@ -121,6 +123,7 @@ class Company extends React.Component{
         if(this.state.id_company > 0){
             url = '/funct/updateCompany'
         }
+        console.log(this.state.number_users)
         let data = {
             name_company:this.state.name_company,
             rfc:this.state.rfc,
@@ -137,8 +140,9 @@ class Company extends React.Component{
         })
         .then(res => res.json())
         .then((result) => {
-            closeAlert()
             console.log(result)
+            closeAlert()
+
             if(result.error == false){
                 this.getCompanys('no-alert')
                 this.cleanForm()
@@ -197,8 +201,42 @@ class Company extends React.Component{
         )
         this.setState({companys: listFilter})
     }
+    getUserRelathion(idCompany)
+    {
+        fetch("/funct/userRelathion?id_company=" + idCompany)
+        .then(res => res.json())
+        .then(result => {
+            
+            this.setState({listUserRel: result.data})
+        })
+    }
+    deleteRelathionUserCompa(e, idPivot, idCompany)
+    {
+        e.preventDefault()
+        fetch('/funct/deleteRelationComUser', {
+            method: "POST",
+            headers: headConexion,
+            body: JSON.stringify({idPivot: idPivot})
+        })
+        .then(res => res.json())
+        .then(result => {
+            
+            if(result.error == false)
+            {
+                this.getUserRelathion(idCompany)
+                successAlert("Hecho", result.message)    
+            }
+            else
+            {
+                errorAlert("Error", result.message)
+            }
+        })
+    }
     setCompanyForm(e, idCompany){
         e.preventDefault()
+
+        this.getUserRelathion(idCompany)
+
         const companySelect = this.state.companys.filter(item => item.id_company == idCompany)
         this.setState({
             id_company:companySelect[0].id_company,
@@ -212,6 +250,62 @@ class Company extends React.Component{
             buttonTextSave:"Actualizar"
         })
         $("#newCompany").modal("show")
+    }
+    handleInputSearchUserRelation(e)
+    {
+        this.setState({inputSearchUserRelation: e.target.value})
+    }
+    handleUserRelation(e)
+    {
+        e.preventDefault()
+        const listFiler = this.state.listUser.filter(
+            item => item.name.toUpperCase().match(e.target.value.toUpperCase()) || 
+            item.email.toUpperCase().match(e.target.value.toUpperCase())
+            )
+        this.setState({usuarios: listFiler})
+        if(e.target.value != ''){
+            this.setState({inputShowUserR:"box-search"})
+        }else{
+            this.setState({inputShowUserR:"d-none"})
+        }
+    }
+    showListUserRelation()
+    {
+        this.setState({inputShowUserR: "box-search", listUserFilRe: this.state.listUser})
+    }
+    selectUserRelation(e, idUser, nameUser)
+    {
+        e.preventDefault()
+        this.setState({inputSearchUserRelation: nameUser, id_user_relation: idUser, inputShowUserR: "d-none"})
+    }
+    addUserRe()
+    {
+        let data = {
+            id_user: this.state.id_user_relation,
+            id_company: this.state.id_company
+        }
+        activeLoader("Agregando...", "Guardando datos")
+        fetch('/funct/addUserRelComp',{
+            method: "POST",
+            headers:headConexion,
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(result => {
+            closeAlert()
+            if(result.error == false)
+            {
+                this.getUserRelathion(this.state.id_company)
+                this.setState({inputSearchUserRelation: "", id_user_relation: 0})
+                setTimeout(function(){
+                    successAlert("Agregado!!", "Se agrego el usuario a la compañia")
+                },100)
+            }else{
+                setTimeout(function(){
+                    errorAlert("Error", result.message)
+                },100)
+            }
+        }) 
     }
     render(){
         return(
@@ -266,12 +360,51 @@ class Company extends React.Component{
                                     </div>
                                     <div className="form-group col-12 col-lg-4 col-xl-4">
                                         <label className="text-secondary font-weight-bold"># usuarios</label>
-                                        <input className="form-control" type="number" min="1" placeholder="Ingrese correo electrónico" onChange={this.handleNumberUser} value={this.state.number_users} required/>
+                                        <input className="form-control" type="number" min="1" onChange={this.handleNumberUser} value={this.state.number_users} required/>
                                     </div>
                                     <div className="form-group col-12 col-lg-4 col-xl-4">
                                         <label className="text-secondary font-weight-bold">Activo</label>
                                         <input className="form-control" type="checkbox" onChange={this.handleActive} checked={this.state.active}/>
                                     </div>
+                                </div>
+                                <div>
+                                    <hr />
+                                    <div className='d-flex'>
+                                        <div className='col-8'>
+                                            <label className='text-secondary font-weight-bold'>Usuario a relacionar</label>
+                                            <input className="form-control" type="text" onKeyUp={this.handleUserRelation} onClick={this.showListUserRelation} onChange={this.handleInputSearchUserRelation} value={this.state.inputSearchUserRelation} placeholder="Buscar usuario"/>
+                                            <div className={this.state.inputShowUserR}>
+                                                <ul className="list-item">
+                                                {this.state.usuarios.map((item) =>
+                                                    <li className="selectInput" onClick={(event) => this.selectUserRelation(event, item.id, item.name + " | " + item.email)} key={item.id}>{item.name} | {item.email}</li>
+                                                )}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div className='col-md-2 d-flex align-items-end'>
+                                            <button type="button" className='btn btn-success mx-2' onClick={this.addUserRe}><i className="fa fa-plus" aria-hidden="true"></i> Agregar</button>                                        
+                                        </div>
+                                    </div>
+                                    <table className='table mt-2'>
+                                        <thead>
+                                            <tr>
+                                                <th scolpe="col">id</th>
+                                                <th>Nombre</th>
+                                                <th>Email</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {this.state.listUserRel.map(item => 
+                                                <tr key={item.id_usuario}>
+                                                    <td>{item.id_usuario}</td>
+                                                    <td>{item.name}</td>
+                                                    <td>{item.email}</td>
+                                                    <th><button className='btn btn-danger' onClick={(event) => this.deleteRelathionUserCompa(event, item.id_pivote, item.id_company)}>Borrar</button></th>
+                                                </tr>    
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                             <div className="modal-footer">
